@@ -26,22 +26,22 @@ class TramRow:
     """Class for creating a row with tram information
 
     Tram information is stored in a frame with three labels that store
-    the tram number, tram description and tram departure time.
+    the tram number, tram direction and tram departure time.
     """
-    def __init__(self, tram_frame, tram_number, tram_description, tram_dep_time):
+    def __init__(self, tram_frame, tram_number, tram_direction, tram_dep_time):
         """ Initiates the strings as StringVar in order to be easy to update.
         """
         self.frame = Frame(tram_frame, bg = "black")
         self.number = StringVar()
-        self.descr = StringVar()
+        self.direction = StringVar()
         self.depTime = StringVar()
 
         self.number.set(tram_number)
-        self.descr.set(tram_description)
+        self.direction.set(tram_direction)
         self.depTime.set(tram_dep_time)
         self.numberLabel = Label(self.frame, textvariable=self.number, font=("default",FONT_SIZE_TRAM), bg = "black", fg="white")
         self.numberLabel.pack(side="left", fill="y", padx=PADDING_X)
-        self.descrLabel = Label(self.frame, textvariable=self.descr, font=("default",FONT_SIZE_TRAM), bg = "black", fg="white")
+        self.descrLabel = Label(self.frame, textvariable=self.direction, font=("default",FONT_SIZE_TRAM), bg = "black", fg="white")
         self.descrLabel.pack(side="left", fill="both")
         self.timeLabel = Label(self.frame, textvariable=self.depTime, font=("default",FONT_SIZE_TRAM), bg = "black", fg="white")
         self.timeLabel.pack(side="right", fill="y", padx=PADDING_X)
