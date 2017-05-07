@@ -2,7 +2,7 @@ import requests
 import datetime
 
 # Redbergsplatsen   9021014005460000
-# Olskrikstorget    9021014005160000
+# Olskrokstorget    9021014005160000
 # Östra sjukhuset   9021014007880000
 # Brunnsparken      9021014001760000
 
@@ -13,7 +13,6 @@ class API_VT:
         self.token = ''
         self.expires_in = 0
         self.expires_time = datetime.datetime.now()
-        self.trams = []
 
     def retrieve_token(self):
         """ Method for retreiving a token
@@ -56,12 +55,13 @@ class API_VT:
         self._header = {'Authorization': 'Bearer ' + token}
         self._r = requests.get(url = self._url_short, headers = self._header, params = self._payload)
         self._tram_data = self._r.json()
-        
+
+        trams = []
         for i in range(len(self._tram_data['DepartureBoard']['Departure'])):
-            self.trams.append({'number': self._tram_data['DepartureBoard']['Departure'][i]['sname'],
+            trams.append({'number': self._tram_data['DepartureBoard']['Departure'][i]['sname'],
                                 'direction': self._tram_data['DepartureBoard']['Departure'][i]['direction'],
-                                'time': self._tram_data['DepartureBoard']['Departure'][i]['time']})
-        return self.trams
+                                'time': self._tram_data['DepartureBoard']['Departure'][i]['rtTime']})
+        return trams
 
 
 
