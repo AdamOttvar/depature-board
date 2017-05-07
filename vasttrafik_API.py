@@ -25,9 +25,9 @@ class API_VT:
             _url = 'https://api.vasttrafik.se:443/token'
             _payload = {'Content-Type': r'application/x-www-form-urlencoded',
                        'grant_type': r'client_credentials',
-                       'Authorization': r'Basic AccessToken',
-                       'client_id': r'Nyckel',
-                       'client_secret': r'Hemlighet'}
+                       'Authorization': r'Basic VVpoNThiSnBzZkd6WVRUYm1lNzRLT21Lak1BYTpNTGszcjRPTm5CVGVsMHE2VTN5cVJrb0R5dGNh',
+                       'client_id': r'UZh58bJpsfGzYTTbme74KOmKjMAa',
+                       'client_secret': r'MLk3r4ONnBTel0q6U3yqRkoDytca'}
             _req_token = requests.post(_url, _payload)
             _json_response = _req_token.json()
             self.token = _json_response['access_token']
