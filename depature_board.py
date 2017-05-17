@@ -15,6 +15,7 @@ LOWER_ARRIVAL_ID = "9021014006480000"
 
 NBR_DEPARTURES = 4
 TIME_OFFSET = 6
+CLOCK_SIZE = 50
 
 import datetime
 from tkinter import *
@@ -35,7 +36,6 @@ class DEPARTURE_BOARD:
         self.clockTime = datetime.datetime.now()
         self.clock = StringVar()
         self.clock.set(self.clockTime.strftime('%H:%M'))
-        print(self.clockTime.strftime('%H:%M'))
         self.clockFrame = Frame(self.root, bg = "black")
         self.clockFrame.pack(side="top", fill="both")
         self.clockLabel = Label(self.clockFrame,
@@ -44,6 +44,10 @@ class DEPARTURE_BOARD:
                                 bg = "black",
                                 fg="white")
         self.clockLabel.pack(side="top", fill="both", expand=True, pady=10)
+
+        # So that fullscreen can be toggled
+        self.root.bind("<F11>", self.fullscreen_toggle)
+        self.root.bind("<Escape>", self.fullscreen_cancel)
         
         # Upper Title
         self.upperTitleFrame = Frame(self.root, bg = "black")
@@ -62,6 +66,25 @@ class DEPARTURE_BOARD:
         # Lower Content
         self.lowerContentFrame = Frame(self.root, bg = "black")
         self.lowerContentFrame.pack(side="top", fill="both", expand=True)
+
+    def fullscreen_toggle(self, event="none"):
+        self.root.focus_set()
+        self.root.attributes("-fullscreen", True)
+        self.root.wm_attributes("-topmost", 1)
+
+    def fullscreen_cancel(self, event="none"):
+        self.root.attributes("-fullscreen", False)
+        self.root.wm_attributes("-topmost", 0)
+        self.centerWindow()
+
+    def centerWindow(self):
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        w = sw*0.7
+        h = sh*0.7
+        x = (sw-w)/2
+        y = (sh-h)/2
+        self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
 
     def update_clock(self):
         self.clockTime = datetime.datetime.now()
@@ -85,6 +108,7 @@ class DEPARTURE_BOARD:
                     self.lowerTrams[i]['direction'],
                     self.lowerTrams[i]['time'])
 
+        self.fullscreen_toggle()
         # Start updating the clock
         self.update_clock()
         # Update trams every 30 seconds
