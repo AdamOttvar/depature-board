@@ -7,11 +7,14 @@ UPPER_ARRIVAL_ID = "9021014007880000"
 LOWER_DEPATURE = "Olskrokstorget"
 LOWER_DEPATURE_ID = "9021014005160000"
 
-LOWER_ARRIVAL = "Brunnsparken"
-LOWER_ARRIVAL_ID = "9021014001760000"
+#LOWER_ARRIVAL = "Brunnsparken"
+#LOWER_ARRIVAL_ID = "9021014001760000"
 
+LOWER_ARRIVAL = "Svingeln"
+LOWER_ARRIVAL_ID = "9021014006480000"
+
+NBR_DEPARTURES = 4
 TIME_OFFSET = 6
-
 
 import datetime
 from tkinter import *
@@ -19,60 +22,91 @@ from tkinter import *
 from tram_GUI import *
 from vasttrafik_API import *
 
+class DEPARTURE_BOARD:
+    """ Class for creating a departure board
 
-root = Tk()
-root.title("Departure Board")
+    """
+    def __init__(self, api, nbrOfDepartures):
+        self.api = api
+        self.nbrOfDep = nbrOfDepartures
+        self.root = Tk()
+        self.root.title("Departure Board")
+        # Clock Frame
+        self.clockTime = datetime.datetime.now()
+        self.clock = StringVar()
+        self.clock.set(self.clockTime.strftime('%H:%M'))
+        print(self.clockTime.strftime('%H:%M'))
+        self.clockFrame = Frame(self.root, bg = "black")
+        self.clockFrame.pack(side="top", fill="both")
+        self.clockLabel = Label(self.clockFrame,
+                                textvariable=self.clock,
+                                font=("default",50),
+                                bg = "black",
+                                fg="white")
+        self.clockLabel.pack(side="top", fill="both", expand=True, pady=10)
+        
+        # Upper Title
+        self.upperTitleFrame = Frame(self.root, bg = "black")
+        self.upperTitleFrame.pack(side="top", fill="both")
+        self.upperTitleRow = TitleRow(self.upperTitleFrame, UPPER_DEPATURE, UPPER_ARRIVAL)
 
+        # Upper Content
+        self.upperContentFrame = Frame(self.root, bg = "black")
+        self.upperContentFrame.pack(side="top", fill="both", expand=True)
+
+        # Lower Title
+        self.lowerTitleFrame = Frame(self.root, bg = "black")
+        self.lowerTitleFrame.pack(side="top", fill="both")
+        self.lowerTitleRow = TitleRow(self.lowerTitleFrame, LOWER_DEPATURE, LOWER_ARRIVAL)
+
+        # Lower Content
+        self.lowerContentFrame = Frame(self.root, bg = "black")
+        self.lowerContentFrame.pack(side="top", fill="both", expand=True)
+
+    def update_clock(self):
+        self.clockTime = datetime.datetime.now()
+        self.clock.set(self.clockTime.strftime('%H:%M'))
+        # Update clock every second
+        self.root.after(1000, self.update_clock)
+
+    def create_board(self):
+        self.token = self.api.retrieve_token()
+        self.upperTrams = self.api.retrieve_trams(self.token, UPPER_DEPATURE_ID, UPPER_ARRIVAL_ID, TIME_OFFSET)
+        self.lowerTrams = self.api.retrieve_trams(self.token, LOWER_DEPATURE_ID, LOWER_ARRIVAL_ID, TIME_OFFSET)
+
+        for i in range(self.nbrOfDep):
+            TramRow(self.upperContentFrame,
+                    self.upperTrams[i]['number'],
+                    self.upperTrams[i]['direction'],
+                    self.upperTrams[i]['time'])
+
+            TramRow(self.lowerContentFrame,
+                    self.lowerTrams[i]['number'],
+                    self.lowerTrams[i]['direction'],
+                    self.lowerTrams[i]['time'])
+
+        # Start updating the clock
+        self.update_clock()
+        # Update trams every 30 seconds
+        self.root.after(30000, self.update_board)
+
+    def update_board(self):
+        # Clear frames
+        for child in self.upperContentFrame.winfo_children():
+            child.destroy()
+                
+        for child in self.lowerContentFrame.winfo_children():
+            child.destroy()
+
+        self.create_board()       
+
+
+# Create connection to Västtrafik API
 api = API_VT()
-token = api.retrieve_token()
-upperTrams = api.retrieve_trams(token, UPPER_DEPATURE_ID, UPPER_ARRIVAL_ID, TIME_OFFSET)
-lowerTrams = api.retrieve_trams(token, LOWER_DEPATURE_ID, LOWER_ARRIVAL_ID, TIME_OFFSET)
-
-#print(upperTrams)
-#print(lowerTrams)
-
-# Upper Title
-upperTitleFrame = Frame(root, bg = "black")
-upperTitleFrame.pack(side="top", fill="both")
-upperTitleRow = TitleRow(upperTitleFrame, UPPER_DEPATURE, UPPER_ARRIVAL)
-
-# Upper Content
-upperContentFrame = Frame(root, bg = "black")
-upperContentFrame.pack(side="top", fill="both", expand=True)
-upperContentRow1 = TramRow(upperContentFrame, upperTrams[0]['number'], upperTrams[0]['direction'], upperTrams[0]['time'])
-upperContentRow2 = TramRow(upperContentFrame, upperTrams[1]['number'], upperTrams[1]['direction'], upperTrams[1]['time'])
-
-# Lower Title
-lowerTitleFrame = Frame(root, bg = "black")
-lowerTitleFrame.pack(side="top", fill="both")
-lowerTitleLabel = TitleRow(lowerTitleFrame, LOWER_DEPATURE, LOWER_ARRIVAL)
-
-# Lower Content
-lowerContentFrame = Frame(root, bg = "black")
-lowerContentFrame.pack(side="top", fill="both", expand=True)
-lowerContentRow1 = TramRow(lowerContentFrame, lowerTrams[0]['number'], lowerTrams[0]['direction'], lowerTrams[0]['time'])
-lowerContentRow2 = TramRow(lowerContentFrame, lowerTrams[1]['number'], lowerTrams[1]['direction'], lowerTrams[1]['time'])
-
-
-def update_time():
-    """
-    _tram_datetime = datetime.datetime.now()+datetime.timedelta(minutes = 0)
-    _tram_time = _tram_datetime.strftime('%H:%M')
-    upperContentRow1.depTime.set(_tram_time)
-    _tram_datetime = datetime.datetime.now()+datetime.timedelta(minutes = 1)
-    _tram_time = _tram_datetime.strftime('%H:%M')
-    upperContentRow2.depTime.set(_tram_time)
-    _tram_datetime = datetime.datetime.now()+datetime.timedelta(minutes = 2)
-    _tram_time = _tram_datetime.strftime('%H:%M')
-    lowerContentRow1.depTime.set(_tram_time)
-    _tram_datetime = datetime.datetime.now()+datetime.timedelta(minutes = 3)
-    _tram_time = _tram_datetime.strftime('%H:%M')
-    lowerContentRow2.depTime.set(_tram_time)
-    """
-    root.after(2000, update_time)
-
-
-root.after(0, update_time)
-root.mainloop()
+# Create the board
+board = DEPARTURE_BOARD(api,NBR_DEPARTURES)
+board.create_board()
+# Start infinite loop
+board.root.mainloop()
 
 
