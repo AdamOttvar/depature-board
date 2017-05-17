@@ -12,7 +12,8 @@ class API_VT:
     def __init__(self):
         self.token = ''
         self.expires_in = 0
-        self.expires_time = datetime.datetime.now()
+        # Needed for the first comparison
+        self.expires_time = datetime.datetime.now()-datetime.timedelta(seconds = 5)
 
     def retrieve_token(self):
         """ Method for retreiving a token
@@ -20,8 +21,6 @@ class API_VT:
         Checks when token expires and only requests a new if the old one has expired
         """
         if self.expires_time < datetime.datetime.now():
-            return self.token
-        else:
             _url = 'https://api.vasttrafik.se:443/token'
             _payload = {'Content-Type': r'application/x-www-form-urlencoded',
                        'grant_type': r'client_credentials',
@@ -33,6 +32,8 @@ class API_VT:
             self.token = _json_response['access_token']
             self.expires_in = _json_response['expires_in']
             self.expires_time = datetime.datetime.now()+datetime.timedelta(seconds = self.expires_in)
+            return self.token
+        else:
             return self.token
 
     def retrieve_trams(self, token, departure_ID, arrival_ID, time_offset):

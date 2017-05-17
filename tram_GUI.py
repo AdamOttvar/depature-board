@@ -27,6 +27,7 @@ class TramRow:
 
     Tram information is stored in a frame with three labels that store
     the tram number, tram direction and tram departure time.
+    Prepared for function that could update labels with StringVar
     """
     def __init__(self, tram_frame, tram_number, tram_direction, tram_dep_time):
         """ Initiates the strings as StringVar in order to be easy to update.
