@@ -1,6 +1,6 @@
 # Module for creating tram GUI
 FONT_SIZE_TITLE = 30
-FONT_SIZE_TRAM = 20
+FONT_SIZE_TRAM = 25
 PADDING_X = 10
 PADDING_Y = 10
 
@@ -17,8 +17,9 @@ class TitleRow:
         self.departure = dep_station
         self.arrival = arr_station
 
-        self.titleLabel = Label(self.frame, text=self.departure + " mot " + self.arrival,
-                        font=("default",30), bg = "black", fg="white")
+        """self.titleLabel = Label(self.frame, text=self.departure + " mot " + self.arrival,
+                        font=("default",30), bg = "black", fg="white")"""
+        self.titleLabel = Label(self.frame, text=self.departure, font=("default",30), bg = "black", fg="white")
         self.titleLabel.pack(side="top", fill="both", expand=True, pady=10)
 
 

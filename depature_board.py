@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 UPPER_DEPATURE = "Redbergsplatsen"
 UPPER_DEPATURE_ID = "9021014005460000"
 
