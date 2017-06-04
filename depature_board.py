@@ -19,10 +19,25 @@ TIME_OFFSET = 6
 CLOCK_SIZE = 50
 
 import datetime
+import subprocess
+import socket
 from tkinter import *
 
 from tram_GUI import *
 from vasttrafik_API import *
+
+def testInternet(host="8.8.8.8", port=53, timeout=3):
+    """
+    Host: 8.8.8.8 (google-public-dns-a.google.com)
+    OpenPort: 53/tcp
+    Service: domain (DNS/TCP)
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except Exception as ex:
+        return False
 
 class DEPARTURE_BOARD:
     """ Class for creating a departure board
@@ -71,11 +86,12 @@ class DEPARTURE_BOARD:
     def fullscreen_toggle(self, event="none"):
         self.root.focus_set()
         self.root.attributes("-fullscreen", True)
-        self.root.wm_attributes("-topmost", 1)
+        self.root.attributes("-topmost", 1)
+        self.root.focus_force()
 
     def fullscreen_cancel(self, event="none"):
         self.root.attributes("-fullscreen", False)
-        self.root.wm_attributes("-topmost", 0)
+        self.root.attributes("-topmost", 0)
         self.centerWindow()
 
     def centerWindow(self):
@@ -87,6 +103,10 @@ class DEPARTURE_BOARD:
         y = (sh-h)/2
         self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
 
+    def update_rotation(self):
+        subprocess.call(["xrandr", "--output", "LVDS1", "--rotate",  "right"])
+        self.root.after(500, self.update_rotation)
+
     def update_clock(self):
         self.clockTime = datetime.datetime.now()
         self.clock.set(self.clockTime.strftime('%H:%M'))
@@ -94,42 +114,69 @@ class DEPARTURE_BOARD:
         self.root.after(1000, self.update_clock)
 
     def create_board(self):
-        self.token = self.api.retrieve_token()
-        self.upperTrams = self.api.retrieve_trams(self.token, UPPER_DEPATURE_ID, UPPER_ARRIVAL_ID, TIME_OFFSET)
-        self.lowerTrams = self.api.retrieve_trams(self.token, LOWER_DEPATURE_ID, LOWER_ARRIVAL_ID, TIME_OFFSET)
+        if testInternet():
+            self.token = self.api.retrieve_token()
+            self.upperTrams = self.api.retrieve_trams(self.token, UPPER_DEPATURE_ID, UPPER_ARRIVAL_ID, TIME_OFFSET)
+            self.lowerTrams = self.api.retrieve_trams(self.token, LOWER_DEPATURE_ID, LOWER_ARRIVAL_ID, TIME_OFFSET)
 
-        for i in range(self.nbrOfDep):
+            if len(self.upperTrams) < self.nbrOfDep:
+                nbrOfUpperLines = len(self.upperTrams)
+            else:
+                nbrOfUpperLines = self.nbrOfDep
+
+            if len(self.lowerTrams) < self.nbrOfDep:
+                nbrOfLowerLines = len(self.lowerTrams)
+            else:
+                nbrOfLowerLines = self.nbrOfDep
+            
+            for i in range(nbrOfUpperLines):
+                TramRow(self.upperContentFrame,
+                        self.upperTrams[i]['number'],
+                        self.upperTrams[i]['direction'],
+                        self.upperTrams[i]['time'])
+                
+            for i in range(nbrOfLowerLines):
+                TramRow(self.lowerContentFrame,
+                        self.lowerTrams[i]['number'],
+                        self.lowerTrams[i]['direction'],
+                        self.lowerTrams[i]['time'])
+            # Update trams every 30 seconds
+            self.root.after(30000, self.update_board)
+        else:
             TramRow(self.upperContentFrame,
-                    self.upperTrams[i]['number'],
-                    self.upperTrams[i]['direction'],
-                    self.upperTrams[i]['time'])
-
+                    '-',
+                    'no connection',
+                    '00:00')
             TramRow(self.lowerContentFrame,
-                    self.lowerTrams[i]['number'],
-                    self.lowerTrams[i]['direction'],
-                    self.lowerTrams[i]['time'])
+                    '-',
+                    'no connection',
+                    '00:00')
+            # Update trams every 0.5 seconds
+            self.root.after(500, self.update_board)
 
+        # Make sure of fullscreen
         self.fullscreen_toggle()
-        # Start updating the clock
-        self.update_clock()
-        # Update trams every 30 seconds
-        self.root.after(30000, self.update_board)
 
     def update_board(self):
-        # Clear frames
-        for child in self.upperContentFrame.winfo_children():
-            child.destroy()
-                
-        for child in self.lowerContentFrame.winfo_children():
-            child.destroy()
+        if len(self.upperContentFrame.winfo_children()) > 0:
+            # Clear frames
+            for child in self.upperContentFrame.winfo_children():
+                child.destroy()
+                    
+            for child in self.lowerContentFrame.winfo_children():
+                child.destroy()
 
-        self.create_board()       
+            self.create_board()
+        else:
+            self.create_board()
 
 
 # Create connection to Västtrafik API
 api = API_VT()
 # Create the board
 board = DEPARTURE_BOARD(api,NBR_DEPARTURES)
+board.update_clock()
+board.update_rotation()
 board.create_board()
 # Start infinite loop
 board.root.mainloop()
