@@ -113,7 +113,8 @@ class DEPARTURE_BOARD:
         self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
 
     def update_rotation(self):
-        subprocess.call(["xrandr", "--output", "LVDS1", "--rotate",  "right"])
+        #subprocess.call(["xrandr", "--output", "LVDS1", "--rotate",  "right"])
+        print("Nae")
         #self.root.after(500, self.update_rotation)
 
     def update_clock(self):
@@ -125,38 +126,31 @@ class DEPARTURE_BOARD:
     def create_board(self):
         if testInternet():
             self.token = self.api.retrieve_token()
-            self.upperTrams = self.api.retrieve_trams(self.token, UPPER_DEPATURE_ID, UPPER_ARRIVAL_ID, TIME_OFFSET)
-            self.lowerTrams = self.api.retrieve_trams(self.token, LOWER_DEPATURE_ID, LOWER_ARRIVAL_ID, TIME_OFFSET)
+            self.upperTrams = self.api.retrieve_trams(self.token, UPPER_DEPATURE_ID, UPPER_ARRIVAL_ID, TIME_OFFSET, NBR_DEPARTURES)
+            self.lowerTrams = self.api.retrieve_trams(self.token, LOWER_DEPATURE_ID, LOWER_ARRIVAL_ID, TIME_OFFSET, NBR_DEPARTURES)
 
-            if len(self.upperTrams) < self.nbrOfDep:
-                nbrOfUpperLines = len(self.upperTrams)
-            else:
-                nbrOfUpperLines = self.nbrOfDep
+            #if len(self.upperTrams) < self.nbrOfDep:
+            #    nbrOfUpperLines = len(self.upperTrams)
+            #else:
+            #    nbrOfUpperLines = self.nbrOfDep
 
-            if len(self.lowerTrams) < self.nbrOfDep:
-                nbrOfLowerLines = len(self.lowerTrams)
-            else:
-                nbrOfLowerLines = self.nbrOfDep
-
-            self.clockTime = datetime.datetime.now().strftime('%H:%M')
-            self.compareTime = datetime.datetime.strptime(self.clockTime, "%H:%M")
-            for i in range(nbrOfUpperLines):
-                self.tramTime = datetime.datetime.strptime(self.upperTrams[i]['time'], "%H:%M")
-                self.deltaT = self.tramTime - self.compareTime
-                self.deltaMinutes = divmod(self.deltaT.total_seconds(),60)
+            for i in range(len(self.upperTrams)):
                 TramRow(self.upperContentFrame,
                         self.upperTrams[i]['number'],
                         self.upperTrams[i]['direction'],
-                        str(int(self.deltaMinutes[0])) + ' min')
+                        str(self.upperTrams[i]['time']) + ' min')
+
+            #if len(self.lowerTrams) < self.nbrOfDep:
+            #    nbrOfLowerLines = len(self.lowerTrams)
+            #else:
+            #    nbrOfLowerLines = self.nbrOfDep
                 
-            for i in range(nbrOfLowerLines):
-                self.tramTime = datetime.datetime.strptime(self.lowerTrams[i]['time'], "%H:%M")
-                self.deltaT = self.tramTime - self.compareTime
-                self.deltaMinutes = divmod(self.deltaT.total_seconds(),60)
+            for i in range(len(self.upperTrams)):
                 TramRow(self.lowerContentFrame,
                         self.lowerTrams[i]['number'],
                         self.lowerTrams[i]['direction'],
-                        str(int(self.deltaMinutes[0])) + ' min')
+                        str(self.lowerTrams[i]['time']) + ' min')
+
             # Update trams every 30 seconds
             self.root.after(30000, self.update_board)
             self.fullscreen_set()
