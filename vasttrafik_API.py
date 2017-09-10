@@ -26,8 +26,8 @@ class API_VT:
             _payload = {'Content-Type': r'application/x-www-form-urlencoded',
                        'grant_type': r'client_credentials',
                        'Authorization': r'Basic VVpoNThiSnBzZkd6WVRUYm1lNzRLT21Lak1BYTpNTGszcjRPTm5CVGVsMHE2VTN5cVJrb0R5dGNh',
-                       'client_id': r'UZh58bJpsfGzYTTbme74KOmKjMAa',
-                       'client_secret': r'MLk3r4ONnBTel0q6U3yqRkoDytca'}
+                       'client_id': r'UZh58bJpsfGzYTTbme74KOmKjMA',
+                       'client_secret': r'MLk3r4ONnBTel0q6U3yqRkoDytc'}
             try:
                 _req_token = requests.post(_url, _payload)
             except requests.exceptions.RequestException as ex:
