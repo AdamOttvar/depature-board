@@ -17,7 +17,9 @@ LOWER_ARRIVAL_ID = "9021014006480000"
 NBR_DEPARTURES = 4
 TIME_OFFSET = 6
 CLOCK_SIZE = 50
+HIBERNATION_TIME = 180000
 
+import os
 import datetime
 import subprocess
 import socket
@@ -85,6 +87,13 @@ class DEPARTURE_BOARD:
 
     def fullscreen_toggle(self, event="none"):
         self.root.focus_set()
+        self.root.attributes("-fullscreen", False)
+        self.root.attributes("-fullscreen", True)
+        self.root.attributes("-topmost", 1)
+        self.root.focus_force()
+        
+    def fullscreen_set(self, event="none"):
+        self.root.focus_set()
         self.root.attributes("-fullscreen", True)
         self.root.attributes("-topmost", 1)
         self.root.focus_force()
@@ -105,7 +114,7 @@ class DEPARTURE_BOARD:
 
     def update_rotation(self):
         subprocess.call(["xrandr", "--output", "LVDS1", "--rotate",  "right"])
-        self.root.after(500, self.update_rotation)
+        #self.root.after(500, self.update_rotation)
 
     def update_clock(self):
         self.clockTime = datetime.datetime.now()
@@ -128,20 +137,29 @@ class DEPARTURE_BOARD:
                 nbrOfLowerLines = len(self.lowerTrams)
             else:
                 nbrOfLowerLines = self.nbrOfDep
-            
+
+            self.clockTime = datetime.datetime.now().strftime('%H:%M')
+            self.compareTime = datetime.datetime.strptime(self.clockTime, "%H:%M")
             for i in range(nbrOfUpperLines):
+                self.tramTime = datetime.datetime.strptime(self.upperTrams[i]['time'], "%H:%M")
+                self.deltaT = self.tramTime - self.compareTime
+                self.deltaMinutes = divmod(self.deltaT.total_seconds(),60)
                 TramRow(self.upperContentFrame,
                         self.upperTrams[i]['number'],
                         self.upperTrams[i]['direction'],
-                        self.upperTrams[i]['time'])
+                        str(int(self.deltaMinutes[0])) + ' min')
                 
             for i in range(nbrOfLowerLines):
+                self.tramTime = datetime.datetime.strptime(self.lowerTrams[i]['time'], "%H:%M")
+                self.deltaT = self.tramTime - self.compareTime
+                self.deltaMinutes = divmod(self.deltaT.total_seconds(),60)
                 TramRow(self.lowerContentFrame,
                         self.lowerTrams[i]['number'],
                         self.lowerTrams[i]['direction'],
-                        self.lowerTrams[i]['time'])
+                        str(int(self.deltaMinutes[0])) + ' min')
             # Update trams every 30 seconds
             self.root.after(30000, self.update_board)
+            self.fullscreen_set()
         else:
             TramRow(self.upperContentFrame,
                     '-',
@@ -151,11 +169,12 @@ class DEPARTURE_BOARD:
                     '-',
                     'no connection',
                     '00:00')
-            # Update trams every 0.5 seconds
-            self.root.after(500, self.update_board)
+            # Update trams every second
+            self.root.after(1000, self.update_board)
+            self.update_rotation()
+            # Make sure of fullscreen
+            self.fullscreen_toggle()
 
-        # Make sure of fullscreen
-        self.fullscreen_toggle()
 
     def update_board(self):
         if len(self.upperContentFrame.winfo_children()) > 0:
@@ -170,6 +189,11 @@ class DEPARTURE_BOARD:
         else:
             self.create_board()
 
+    def hibernate_mirror(self):
+        os.system("systemctl suspend")
+        time.sleep(1)
+        self.root.after(HIBERNATION_TIME, self.hibernate_mirror)
+
 
 # Create connection to Västtrafik API
 api = API_VT()
@@ -178,6 +202,7 @@ board = DEPARTURE_BOARD(api,NBR_DEPARTURES)
 board.update_clock()
 board.update_rotation()
 board.create_board()
+board.root.after(HIBERNATION_TIME, board.hibernate_mirror)
 # Start infinite loop
 board.root.mainloop()
 

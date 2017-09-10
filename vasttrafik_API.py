@@ -1,5 +1,6 @@
 import requests
 import datetime
+import time
 
 # Redbergsplatsen   9021014005460000
 # Olskrokstorget    9021014005160000
@@ -24,10 +25,15 @@ class API_VT:
             _url = 'https://api.vasttrafik.se:443/token'
             _payload = {'Content-Type': r'application/x-www-form-urlencoded',
                        'grant_type': r'client_credentials',
-                       'Authorization': r'Basic AccessToken',
-                       'client_id': r'Nyckel',
-                       'client_secret': r'Hemlighet'}
-            _req_token = requests.post(_url, _payload)
+                       'Authorization': r'Basic VVpoNThiSnBzZkd6WVRUYm1lNzRLT21Lak1BYTpNTGszcjRPTm5CVGVsMHE2VTN5cVJrb0R5dGNh',
+                       'client_id': r'UZh58bJpsfGzYTTbme74KOmKjMAa',
+                       'client_secret': r'MLk3r4ONnBTel0q6U3yqRkoDytca'}
+            try:
+                _req_token = requests.post(_url, _payload)
+            except requests.exceptions.RequestException as ex:
+                time.sleep(5)
+                _req_token = requests.post(_url, _payload)
+                
             _json_response = _req_token.json()
             self.token = _json_response['access_token']
             self.expires_in = _json_response['expires_in']
@@ -42,7 +48,7 @@ class API_VT:
         Returns departures from a certain stopID to another stopID, given a token and
         how much of a time offest that should be added
         """
-        self._tram_datetime = datetime.datetime.now()+datetime.timedelta(minutes = 8)
+        self._tram_datetime = datetime.datetime.now()+datetime.timedelta(minutes = time_offset)
         self._tram_date = self._tram_datetime.strftime('%Y-%m-%d')
         self._tram_time = self._tram_datetime.strftime('%H:%M')
         self._url_short = r'https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard?id=' + departure_ID
