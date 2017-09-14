@@ -17,7 +17,9 @@ LOWER_ARRIVAL_ID = "9021014006480000"
 NBR_DEPARTURES = 4
 TIME_OFFSET = 6
 CLOCK_SIZE = 50
+HIBERNATION_TIME = 180000
 
+import os
 import datetime
 import subprocess
 import socket
@@ -85,6 +87,13 @@ class DEPARTURE_BOARD:
 
     def fullscreen_toggle(self, event="none"):
         self.root.focus_set()
+        self.root.attributes("-fullscreen", False)
+        self.root.attributes("-fullscreen", True)
+        self.root.attributes("-topmost", 1)
+        self.root.focus_force()
+        
+    def fullscreen_set(self, event="none"):
+        self.root.focus_set()
         self.root.attributes("-fullscreen", True)
         self.root.attributes("-topmost", 1)
         self.root.focus_force()
@@ -104,8 +113,9 @@ class DEPARTURE_BOARD:
         self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
 
     def update_rotation(self):
+        # TODO Add check to see which OS is used and un/comment the rotation
         subprocess.call(["xrandr", "--output", "LVDS1", "--rotate",  "right"])
-        self.root.after(500, self.update_rotation)
+        #self.root.after(500, self.update_rotation)
 
     def update_clock(self):
         self.clockTime = datetime.datetime.now()
@@ -116,32 +126,34 @@ class DEPARTURE_BOARD:
     def create_board(self):
         if testInternet():
             self.token = self.api.retrieve_token()
-            self.upperTrams = self.api.retrieve_trams(self.token, UPPER_DEPATURE_ID, UPPER_ARRIVAL_ID, TIME_OFFSET)
-            self.lowerTrams = self.api.retrieve_trams(self.token, LOWER_DEPATURE_ID, LOWER_ARRIVAL_ID, TIME_OFFSET)
+            self.upperTrams = self.api.retrieve_trams(self.token, UPPER_DEPATURE_ID, UPPER_ARRIVAL_ID, TIME_OFFSET, NBR_DEPARTURES)
+            self.lowerTrams = self.api.retrieve_trams(self.token, LOWER_DEPATURE_ID, LOWER_ARRIVAL_ID, TIME_OFFSET, NBR_DEPARTURES)
 
-            if len(self.upperTrams) < self.nbrOfDep:
-                nbrOfUpperLines = len(self.upperTrams)
-            else:
-                nbrOfUpperLines = self.nbrOfDep
+            #if len(self.upperTrams) < self.nbrOfDep:
+            #    nbrOfUpperLines = len(self.upperTrams)
+            #else:
+            #    nbrOfUpperLines = self.nbrOfDep
 
-            if len(self.lowerTrams) < self.nbrOfDep:
-                nbrOfLowerLines = len(self.lowerTrams)
-            else:
-                nbrOfLowerLines = self.nbrOfDep
-            
-            for i in range(nbrOfUpperLines):
+            for i in range(len(self.upperTrams)):
                 TramRow(self.upperContentFrame,
                         self.upperTrams[i]['number'],
                         self.upperTrams[i]['direction'],
-                        self.upperTrams[i]['time'])
+                        str(self.upperTrams[i]['time']) + ' min')
+
+            #if len(self.lowerTrams) < self.nbrOfDep:
+            #    nbrOfLowerLines = len(self.lowerTrams)
+            #else:
+            #    nbrOfLowerLines = self.nbrOfDep
                 
-            for i in range(nbrOfLowerLines):
+            for i in range(len(self.upperTrams)):
                 TramRow(self.lowerContentFrame,
                         self.lowerTrams[i]['number'],
                         self.lowerTrams[i]['direction'],
-                        self.lowerTrams[i]['time'])
+                        str(self.lowerTrams[i]['time']) + ' min')
+
             # Update trams every 30 seconds
             self.root.after(30000, self.update_board)
+            self.fullscreen_set()
         else:
             TramRow(self.upperContentFrame,
                     '-',
@@ -151,11 +163,12 @@ class DEPARTURE_BOARD:
                     '-',
                     'no connection',
                     '00:00')
-            # Update trams every 0.5 seconds
-            self.root.after(500, self.update_board)
+            # Update trams every second
+            self.root.after(1000, self.update_board)
+            self.update_rotation()
+            # Make sure of fullscreen
+            self.fullscreen_toggle()
 
-        # Make sure of fullscreen
-        self.fullscreen_toggle()
 
     def update_board(self):
         if len(self.upperContentFrame.winfo_children()) > 0:
@@ -170,6 +183,11 @@ class DEPARTURE_BOARD:
         else:
             self.create_board()
 
+    def hibernate_mirror(self):
+        os.system("systemctl suspend")
+        time.sleep(1)
+        self.root.after(HIBERNATION_TIME, self.hibernate_mirror)
+
 
 # Create connection to Västtrafik API
 api = API_VT()
@@ -178,6 +196,7 @@ board = DEPARTURE_BOARD(api,NBR_DEPARTURES)
 board.update_clock()
 board.update_rotation()
 board.create_board()
+board.root.after(HIBERNATION_TIME, board.hibernate_mirror)
 # Start infinite loop
 board.root.mainloop()
 

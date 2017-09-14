@@ -37,6 +37,8 @@ class TramRow:
         self.number = StringVar()
         self.direction = StringVar()
         self.depTime = StringVar()
+        if len(tram_direction) > 18:
+            tram_direction = tram_direction[:17]
 
         self.number.set(tram_number)
         self.direction.set(tram_direction)
