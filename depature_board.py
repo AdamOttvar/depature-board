@@ -113,8 +113,8 @@ class DEPARTURE_BOARD:
         self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
 
     def update_rotation(self):
-        #subprocess.call(["xrandr", "--output", "LVDS1", "--rotate",  "right"])
-        print("Nae")
+        # TODO Add check to see which OS is used and un/comment the rotation
+        subprocess.call(["xrandr", "--output", "LVDS1", "--rotate",  "right"])
         #self.root.after(500, self.update_rotation)
 
     def update_clock(self):
